@@ -68,9 +68,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as CA_socket:
         print(f'为服务器生成摘要')
         certificate = pkcs1_15.new(CA_privateKey).sign(certificateHash)
         print(f"将摘要签名为证书")
-        print('================================\n')
-
         input('按回车键向服务器发放证书...')
+        print('================================\n')
 
         # 返回信息
         DES_Message = DES_Cipher.encrypt(pad(str(
@@ -92,9 +91,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as CA_socket:
         print('\n================================')
         print(f'客户端{address}已连接')
         input('按回车键向客户端发送CA的ID和公钥')
+        print('================================\n')
         with Client_socket:
             Client_socket.sendall(str({'ID': ID_CA,
                                        'PK': CA_publicKey.export_key().decode(ENCODING)}).encode(ENCODING))
 
+        print('\n================================')
         print(f'已向客户端{address}发送CA的ID和公钥')
         print('================================\n')

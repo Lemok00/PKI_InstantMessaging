@@ -38,13 +38,12 @@ print(f'生成服务器公钥私钥对')
 letters = string.ascii_lowercase
 symmetricalKeyToCA = (''.join(random.choice(letters) for i in range(8)))
 print(f'生成与CA通信的对称密钥{symmetricalKeyToCA}')
-print('================================\n')
 
 # 记录用户信息
 Clients = {}
 
 input('按回车键开始服务器认证过程...')
-
+print('================================\n')
 
 '''服务器认证过程'''
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
@@ -85,13 +84,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
             CERTIFICATE
         )
         print('证书验证成功')
-        print('================================\n')
     except:
         print('证书验证失败')
-        print('================================\n')
         exit()
 
 input('按回车键开始运行服务器...')
+print('================================\n')
 
 '''服务器运行过程'''
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
@@ -115,9 +113,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
             if receivedMessage['Tag'] == 'REG':
 
                 print(f'从客户端{address}接收注册信息{receivedMessage}')
-                print('================================\n')
 
                 input('按回车键向客户端发送服务器公钥和证书...')
+                print('================================\n')
                 # 给客户端发送证书和公钥
                 message = str({'Certificate': CERTIFICATE,
                                'ID': ID_Server,
@@ -163,9 +161,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
                 tmpKey = (''.join(random.choice(letters) for i in range(8)))
                 Clients[Client_ID]['tmpKey'] = tmpKey
                 print(f"生成与客户端{Client_ID}本次会话使用的临时密钥{tmpKey}")
+                input('按回车键回复客户端注册结果...')
                 print('================================\n')
 
-                input('按回车键回复客户端注册结果...')
                 print('\n================================')
                 print(f'已向客户端{Client_ID}返回注册结果')
                 print('================================\n')
@@ -198,13 +196,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
                 Clients[Client_ID]['Port'] = DES_Message['Port']
                 # 生成临时DES密钥
                 tmpKey = (''.join(random.choice(letters) for i in range(8)))
-                print(f"生成与客户端{Client_ID}本次会话使用临时密钥 {tmpKey}")
-                print('================================\n')
                 Clients[Client_ID]['tmpKey'] = tmpKey
 
+                print(f"生成与客户端{Client_ID}本次会话使用临时密钥 {tmpKey}")
                 input('按回车键向客户端返回登陆结果...')
-                print('\n================================')
-                print(f'已向客户端{Client_ID}返回登陆结果')
                 print('================================\n')
 
                 # 生成回复信息
@@ -213,6 +208,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
                                'TS': time.time().__trunc__()}).encode(ENCODING)
                 message = DES_Cipher.encrypt(pad(message, BLOCK_SIZE))
                 Client_socket.sendall(message)
+                print('\n================================')
+                print(f'已向客户端{Client_ID}返回登陆结果')
+                print('================================\n')
 
             # 密钥协商
             elif receivedMessage['Tag'] == 'CON':
@@ -224,32 +222,46 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
                 RSA_Cipher = PKCS1_OAEP.new(Server_privateKey)
                 RSA_Message = eval(RSA_Cipher.decrypt(RSA_Message).decode(ENCODING))
                 SourceClientID = RSA_Message['ID']
-                print(f'从RSA加密信息中解密出源客户端的ID {SourceClientID}')
+                print(f'从RSA加密信息中解密出源客户端的ID{SourceClientID}')
                 SourceDEStmpKey = Clients[SourceClientID]['tmpKey']
-                print(f'读取与源客户端 {SourceClientID} 通信的临时对称密钥 {SourceDEStmpKey}')
+                print(f'读取与源客户端{SourceClientID}通信的临时对称密钥{SourceDEStmpKey}')
                 # 解密DES信息
                 DES_Cipher = DES.new(SourceDEStmpKey.encode(ENCODING), DES.MODE_ECB)
                 DES_Message = eval(unpad(DES_Cipher.decrypt(DES_Message), BLOCK_SIZE).decode(ENCODING))
                 TargetClientID = DES_Message['Target']
-                print(f"从DES加密信息中解密出目标客户端的ID {TargetClientID}")
+                print(f"从DES加密信息中解密出目标客户端的ID{TargetClientID}")
                 TargetClientIP = Clients[TargetClientID]['IP']
                 TargetClientPort = Clients[TargetClientID]['Port']
                 TargetPK = Clients[TargetClientID]['PK']
                 TargetDEStmpKey = Clients[TargetClientID]['tmpKey']
                 # 将目标客户端公钥回复给源客户端
-                print(f"将目标客户端公钥回复给源客户端: {TargetPK}")
+                print(f"将目标客户端公钥回复给源客户端:\n{TargetPK}")
+                input('按回车键向源客户端返回DES加密的目标客户端公钥...')
+                print('================================\n')
+
                 message = str({'ID': SourceClientID, 'PK': TargetPK}).encode(ENCODING)
                 message = DES_Cipher.encrypt(pad(message, BLOCK_SIZE))
                 Client_socket.sendall(message)
+
+                print('\n================================')
+                print(f'已向源客户端{Client_ID}返回DES加密的目标客户端公钥')
+                print('================================\n')
 
                 # 接收客户端发送的信息
                 receivedMessage = Client_socket.recv(BUF_SIZE)
                 receivedMessage = unpad(DES_Cipher.decrypt(receivedMessage), BLOCK_SIZE).decode(ENCODING)
                 receivedMessage = eval(receivedMessage)
                 messageToTarget = receivedMessage['Message']
-                print(f"源客户端发送给目标客户端的信息为: {messageToTarget}")
+
+                print('\n================================')
+                print(f"（窃听）源客户端发送给目标客户端的密钥协商信息为: {messageToTarget}")
                 # 连接目标客户端
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Target_socket:
+                    print(f"连接目标客户端{TargetClientID}, {(TargetClientIP, TargetClientPort)}")
+                    print(f"将源客户端公钥发送给目标客户端:\n{Clients[SourceClientID]['PK']}")
+                    input('按回车键向目标客户端发送DES加密的密钥协商信息...')
+                    print('================================\n')
+
                     Target_socket.connect((TargetClientIP, TargetClientPort))
                     DES_message = str({'Source': SourceClientID,
                                        'Target': TargetClientID,
@@ -266,33 +278,46 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
                     DES_message = DES_Cipher.encrypt(pad(DES_message, BLOCK_SIZE))
                     Target_socket.sendall(DES_message)
 
+                    print('\n================================')
+                    print(f'已向目标客户端{TargetClientID}发送DES加密的密钥协商信息')
+                    print('================================\n')
+
                     # 接收目标客户端回复的秘密信息
                     receivedMessage = Target_socket.recv(BUF_SIZE)
+                    print('\n================================')
+                    print(f'接收从目标客户端返回的密钥协商信息')
                     DES_Cipher = DES.new(TargetDEStmpKey.encode(ENCODING), DES.MODE_ECB)
                     receivedMessage = unpad(DES_Cipher.decrypt(receivedMessage), BLOCK_SIZE).decode(ENCODING)
                     receivedMessage = eval(receivedMessage)
-                    print(f"目标客户端发送给源客户端的信息为: {receivedMessage['Mess']}")
+                    print(f"（窃听）目标客户端返回给源客户端的信息为: {receivedMessage['Mess']}")
+                    input('按回车键向源客户端返回密钥协商信息...')
+                    print('================================\n')
+
                     message = str({'Mess': receivedMessage['Mess'],
                                    'TS': time.time().__trunc__()}).encode(ENCODING)
                     DES_Cipher = DES.new(SourceDEStmpKey.encode(ENCODING), DES.MODE_ECB)
                     message = DES_Cipher.encrypt(pad(message, BLOCK_SIZE))
                     Client_socket.sendall(message)
 
+                    print('\n================================')
+                    print(f'已向源客户端返回密钥协商信息')
+                    print('================================\n')
+
             # 信息（文件）传递
             elif receivedMessage['Tag'] == 'MESS':
                 # 接受客户端发送的信息
-                print(f'从客户端接收消息（文件）传递信息 {receivedMessage}')
+                print(f'从客户端接收消息（文件）传递信息')
                 RSA_Message = receivedMessage['RSA']
                 DES_Message = receivedMessage['DES']
 
                 RSA_Cipher = PKCS1_OAEP.new(Server_privateKey)
                 RSA_Message = RSA_Cipher.decrypt(RSA_Message).decode(ENCODING)
                 SourceClientID = eval(RSA_Message)['ID']
-                print(f'消息（文件）传递的源客户端为 {SourceClientID}')
+                print(f'消息（文件）传递的源客户端为{SourceClientID}')
 
                 DES_Cipher = DES.new(Clients[SourceClientID]['tmpKey'].encode(ENCODING), DES.MODE_ECB)
                 DES_Message = eval(unpad(DES_Cipher.decrypt(DES_Message), BLOCK_SIZE).decode(ENCODING))
-                print(f"发送给目标客户端 {DES_Message['Target']} 的消息（文件）为 {DES_Message['Mess']}")
+                print(f"（窃听）发送给目标客户端 {DES_Message['Target']} 的消息（文件）为 {DES_Message['Mess']}")
 
                 TargetClientID = DES_Message['Target']
                 DES_Message = str({'Source': DES_Message['Source'],
@@ -302,7 +327,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Server_socket:
                 DES_Cipher = DES.new(Clients[TargetClientID]['tmpKey'].encode(ENCODING), DES.MODE_ECB)
                 DES_Message = DES_Cipher.encrypt(pad(DES_Message, BLOCK_SIZE))
                 message = str({'Tag': "MESS", 'DES': DES_Message}).encode(ENCODING)
+
+                print(f'使用DES加密服务器与目标客户端之间的通信')
+                input('按回车键向目标客户端发送消息（文件）传递信息...')
+                print('================================\n')
+
                 # 连接目标客户端
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as Target_socket:
                     Target_socket.connect((Clients[TargetClientID]['IP'], Clients[TargetClientID]['Port']))
                     Target_socket.sendall(message)
+
+                print('\n================================')
+                print(f'已向目标客户端发送消息（文件）传递信息')
+                print('================================\n')
