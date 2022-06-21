@@ -74,7 +74,6 @@ if os.path.exists(ID_Client):
         tmpKey = receivedMessage['Key']
         print(f"登陆成功")
         print(f"与服务器本次会话使用临时密钥 {tmpKey}")
-        print('================================\n')
 
 else:
     print(f'用户注册')
