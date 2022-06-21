@@ -8,24 +8,23 @@
 
 通讯过程可以分为五步：（1）服务器注册；（2）客户端注册；（3）客户端登陆；（4）密钥协商；（5）消息（文件）传递。
 
-##符号说明
-
+## 符号说明
 ![img.png](imgs/img.png)
 
-##服务器注册
+## 服务器注册
 ![img.png](imgs/server_reg.png)
 
-##客户端注册
+## 客户端注册
 ![img.png](imgs/client_reg.png)
 
-##客户端登陆
+## 客户端登陆
 ![img.png](imgs/client_log.png)
 
-##密钥协商
+## 密钥协商
 ![img.png](imgs/client_con.png)
 
-##消息（文件）传递
+## 消息（文件）传递
 ![img.png](imgs/client_mess.png)
 
-##演示视频
+## 演示视频
 [https://www.bilibili.com/video/BV1rW4y167zy/?vd_source=868270b9a71ad4cf3f9d9389b022032c](https://www.bilibili.com/video/BV1rW4y167zy/?vd_source=868270b9a71ad4cf3f9d9389b022032c)
